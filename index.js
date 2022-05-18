@@ -23,14 +23,13 @@ async function run() {
         // POST API
         app.post('/addTodo', async (req, res) => {
             const todo = req.body;
-            console.log(todo)
             const result = await todoCollection.insertOne(todo);
             res.send(result)
         })
 
         // All todo API
         app.get('/todos', async (req, res) => {
-            const todos = await todoCollection.find({}).toArray();
+            const todos = await todoCollection.find({}).sort({ '_id': -1 }).toArray();
             res.send(todos);
         })
 
@@ -39,6 +38,21 @@ async function run() {
             const todoId = req.params.id;
             const filter = { _id: ObjectId(todoId) }
             const result = await todoCollection.deleteOne(filter);
+            res.send(result);
+        })
+
+        // Update a todo API
+        app.put('/todo/:id', async (req, res) => {
+            const todoId = req.params.id;
+            const updatedToDo = req.body;
+            const filter = { _id: ObjectId(todoId) }
+            const options = { upsert: true };
+
+            const updateDoc = {
+                $set: updatedToDo
+            }
+            // Update data in MongoDB
+            const result = await todoCollection.updateOne(filter, updateDoc, options);
             res.send(result);
         })
 
