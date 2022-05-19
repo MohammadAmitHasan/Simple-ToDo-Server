@@ -37,7 +37,7 @@ async function run() {
         const todoCollection = client.db('Simple-ToDo').collection('todo-List');
 
         // POST API
-        app.post('/addTodo', async (req, res) => {
+        app.post('/addTodo', verifyJWT, async (req, res) => {
             const todo = req.body;
             const result = await todoCollection.insertOne(todo);
             res.send(result)
@@ -45,8 +45,20 @@ async function run() {
 
         // All todo API
         app.get('/todos', verifyJWT, async (req, res) => {
-            const todos = await todoCollection.find({}).sort({ '_id': -1 }).toArray();
-            res.send(todos);
+
+            const userEmail = req.query.userEmail;
+            const decodedEmail = req.decoded.email;
+
+            // Check the email with decoded email
+            if (decodedEmail === userEmail) {
+                const query = { user: userEmail }
+                const todos = await todoCollection.find(query).sort({ '_id': -1 }).toArray();
+                res.send(todos);
+            }
+            else {
+                return res.status(403).send({ message: 'Forbidden Access' });
+            }
+
         })
 
         // Delete a todo API
